@@ -1,0 +1,7 @@
+[tool.poe.tasks]
+
+# 任务命名规则：<类型前缀>_<模块>_<章节目录编号>_<文件名（不含扩展名）>
+# n = Notebook，e = Exercise，p = Project
+# notebooks/module1/01/01_simple_rag_demo.py -> n_m1_01_01_simple_rag_demo
+n_m1_01_01_simple_rag_demo = {cmd = "python notebooks/module1/01/01_simple_rag_demo.py"}
+n_tests_environment_check = {cmd = "python notebooks/tests/environment_check.py"}
