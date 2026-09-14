@@ -1,2 +1,7 @@
 ipykernel>=6.25,<7
 poethepoet>=0.29,<1
+llama-index-core>=0.10.0
+llama-index-readers-web>=0.1.0
+llama-index-readers-file>=0.1.0
+pypdf>=3.0.0
+langchain
