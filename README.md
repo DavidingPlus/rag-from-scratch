@@ -35,3 +35,22 @@ notebooks/module1/01/01_simple_rag_demo.py
 
 在 VSCode 中选择 `Python (rag-from-scratch)` Kernel，即可运行 `notebooks/` 下的 Notebook。
 
+## 自动同步任务和依赖
+
+新增或复制 Python 文件后，运行：
+
+```bash
+python scripts/sync.py
+# 或
+poe sync
+```
+
+脚本会扫描 `notebooks/**/*.py`，为缺少的文件新增 Poe 任务，并根据文件中的 import 语句把缺少的第三方依赖追加到 `requirements.txt`。已有任务和依赖不会删除或重排，重复运行也是安全的。修改前可以先用 `--dry-run` 查看结果：
+
+```bash
+python scripts/sync.py --dry-run
+# 或
+poe sync--dry-run
+```
+
+依赖名称通常可以从 import 名称推断；对于名称不一致的包，脚本内置了常见映射。动态导入、代码注释或某个第三方包的间接依赖无法仅通过静态扫描确定，仍需要手动检查。
