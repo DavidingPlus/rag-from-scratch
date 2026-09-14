@@ -45,7 +45,7 @@ python scripts/sync.py
 poe sync
 ```
 
-脚本会扫描 `notebooks/**/*.py`，为缺少的文件新增 Poe 任务，并根据文件中的 import 语句把缺少的第三方依赖追加到 `requirements.txt`。已有任务和依赖不会删除或重排，重复运行也是安全的。修改前可以先用 `--dry-run` 查看结果：
+脚本会递归扫描 `notebooks/**/*.py`（包括函数体内部的静态 import），为缺少的文件新增 Poe 任务，并根据文件中的 import 语句把缺少的第三方依赖追加到 `requirements.txt`。已有任务和依赖不会删除或重排，重复运行也是安全的。修改前可以先用 `--dry-run` 查看结果：
 
 ```bash
 python scripts/sync.py --dry-run

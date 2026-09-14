@@ -1,13 +1,18 @@
 [tool.poe.tasks]
 
+install = {cmd = "pip install -r ./requirements.txt"}
+
 sync = {cmd = "python scripts/sync.py"}
 sync--dry-run = {cmd = "python scripts/sync.py --dry-run"}
 
 # 任务命名规则：<类型前缀>_<模块>_<章节目录编号>_<文件名（不含扩展名）>
+n_tests_environment_check = {cmd = "python notebooks/tests/environment_check.py"}
 # n = Notebook，e = Exercise，p = Project
 # notebooks/module1/01/01_simple_rag_demo.py -> n_m1_01_01_simple_rag_demo
 n_m1_01_01_simple_rag_demo = {cmd = "python notebooks/module1/01/01_simple_rag_demo.py"}
 n_m1_01_02_document_loader = {cmd = "python notebooks/module1/01/02_document_loader.py"}
-n_tests_environment_check = {cmd = "python notebooks/tests/environment_check.py"}
-
 n_m1_01_03_text_splitter = {cmd = "python notebooks/module1/01/03_text_splitter.py"}
+n_m1_01_04_embedding_model = {cmd = "python notebooks/module1/01/04_embedding_model.py"}
+n_m1_01_05_vector_store = {cmd = "python notebooks/module1/01/05_vector_store.py"}
+n_m1_01_06_llm = {cmd = "python notebooks/module1/01/06_llm.py"}
+n_m1_02_01_create_sample_data = {cmd = "python notebooks/module1/02/01_create_sample_data.py"}

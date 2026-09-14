@@ -21,7 +21,9 @@ from pathlib import Path
 REQUIREMENT_OVERRIDES = {
     "llama_index.readers.file": "llama-index-readers-file>=0.1.0",
     "llama_index.readers.web": "llama-index-readers-web>=0.1.0",
+    "llama_index.text_splitter": "llama-index>=0.9.0",
     "llama_index": "llama-index-core>=0.10.0",
+    "langchain.text_splitter": "langchain",
     "dotenv": "python-dotenv",
     "PIL": "Pillow",
     "cv2": "opencv-python",
@@ -185,8 +187,6 @@ def add_tasks(content: str, tasks: dict[str, str]) -> tuple[str, list[str]]:
     prefix = content[:body_end]
     suffix = content[body_end:]
     if prefix and not prefix.endswith(("\n", "\r")):
-        prefix += newline
-    if prefix and not prefix.endswith(newline + newline):
         prefix += newline
 
     updated = prefix + task_lines + newline + suffix
@@ -358,6 +358,11 @@ def sync(project_root: Path, scan_dir: Path, dry_run: bool = False) -> int:
             print(f"  + {requirement}")
     else:
         print("requirements.txt：无需更新")
+
+    if discovered_requirements:
+        print("识别到的第三方依赖：")
+        for requirement in sorted(discovered_requirements):
+            print(f"  = {requirement}")
 
     if dry_run:
         print("试运行完成，未写入文件。")
