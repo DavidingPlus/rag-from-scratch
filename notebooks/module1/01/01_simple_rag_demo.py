@@ -3,6 +3,8 @@
 仅用于理解概念，非生产代码
 """
 
+import re
+
 # 步骤1：准备知识库（简化版，实际从文件加载）
 knowledge_base = [
     {
@@ -21,6 +23,22 @@ knowledge_base = [
 
 
 # 步骤2：简单的检索函数（基于关键词匹配）
+def extract_keywords(text):
+    """
+    提取文本中的英文关键词。
+
+    这个示例的知识库主题是 Python、JavaScript、Rust 等英文名称，
+    而用户问题是中文。如果直接使用 str.split()，整句中文问题会
+    被当成一个完整的“词”，无法匹配知识库中的主题名称。
+
+    这里使用正则表达式提取英文单词，既能处理中文问题，也不需要
+    额外安装分词库。真实项目通常会使用中文分词或 Embedding 检索。
+    """
+    return set(
+        re.findall(r"[a-zA-Z][a-zA-Z0-9+#-]*", text.lower())
+    )
+
+
 def retrieve_documents(query, kb, top_k=2):
     """
     检索相关文档
@@ -33,20 +51,24 @@ def retrieve_documents(query, kb, top_k=2):
     Returns:
         相关文档列表
     """
-    # 简单的关键词匹配（实际应该使用向量相似度）
-    query_lower = query.lower()
+    # 提取问题中的关键词，例如：
+    # “Python是什么时候创建的？” -> {"python"}
+    query_keywords = extract_keywords(query)
 
-    # 计算每个文档的相关性分数
+    # 计算每个文档的相关性分数。
+    # 分数等于“问题关键词”和“文档关键词”的交集数量。
     scores = []
     for doc in kb:
-        content_lower = doc["content"].lower()
-        # 简单计算：统计问题中出现在文档中的词数
-        score = sum(1 for word in query_lower.split() if word in content_lower)
-        scores.append((doc, score))
+        content_keywords = extract_keywords(doc["content"])
+        score = len(query_keywords & content_keywords)
 
-    # 按分数排序，返回top_k
+        # 只保留至少匹配到一个关键词的文档。
+        if score > 0:
+            scores.append((doc, score))
+
+    # 按相关性分数从高到低排序，返回前 top_k 个结果。
     scores.sort(key=lambda x: x[1], reverse=True)
-    return [doc for doc, score in scores[:top_k] if score > 0]
+    return [doc for doc, score in scores[:top_k]]
 
 
 # 步骤3：构建提示词
