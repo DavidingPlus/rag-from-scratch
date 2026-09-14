@@ -22,7 +22,11 @@ def clean_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
 
     # 移除特殊字符（保留中文、英文、数字、标点）
-    text = re.sub(r'[^\w\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef.,!?;:()""'\'】[【]', '', text)
+    text = re.sub(
+        r'[^\w\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef.,!?;:()“”‘’"【】\[\]]',
+        '',
+        text,
+    )
 
     # 移除过短的行
     lines = [line.strip() for line in text.split('\n')]

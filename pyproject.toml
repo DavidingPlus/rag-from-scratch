@@ -18,3 +18,4 @@ n_m1_01_06_llm = {cmd = "python notebooks/module1/01/06_llm.py"}
 n_m1_02_01_create_sample_data = {cmd = "python notebooks/module1/02/01_create_sample_data.py"}
 n_m1_02_02_prepare_custom_data = {cmd = "python notebooks/module1/02/02_prepare_custom_data.py"}
 n_m1_02_03_preprocess_data = {cmd = "python notebooks/module1/02/03_preprocess_data.py"}
+n_m1_02_04_prepare_data_pipeline = {cmd = "python notebooks/module1/02/04_prepare_data_pipeline.py"}
