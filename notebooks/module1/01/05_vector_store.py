@@ -1,29 +1,12 @@
 # 示例：使用Chroma向量数据库
+import importlib
+
 import chromadb
 from chromadb.config import Settings
 
-
-# 开源模型（推荐私有部署）
-def embed_with_sentence_transformer(texts, model_name="BAAI/bge-small-zh-v1.5"):
-    """
-    使用Sentence Transformers嵌入模型
-
-    Args:
-        texts: 文本列表
-        model_name: 模型名称
-
-    Returns:
-        嵌入向量列表
-    """
-    from sentence_transformers import SentenceTransformer
-
-    # 加载模型（首次会下载）
-    model = SentenceTransformer(model_name)
-
-    # 生成嵌入
-    embeddings = model.encode(texts)
-
-    return embeddings
+# 教程文件名带有编号，需要通过 importlib 引用同目录示例。
+embedding_model = importlib.import_module("04_embedding_model")
+embed_with_sentence_transformer = embedding_model.embed_with_sentence_transformer
 
 
 # 1. 初始化Chroma
