@@ -19,10 +19,10 @@ from pathlib import Path
 
 # import 名称和 PyPI 发行包名称并不总是一致。这里放项目中已经用到的包，以及几个常见的名称映射；其余包会优先从当前环境查询，最后才按 import_name -> import-name 推断。
 REQUIREMENT_OVERRIDES = {
-    "llama_index.readers.file": "llama-index-readers-file>=0.1.0",
-    "llama_index.readers.web": "llama-index-readers-web>=0.1.0",
-    "llama_index.text_splitter": "llama-index>=0.9.0",
-    "llama_index": "llama-index-core>=0.10.0",
+    "llama_index.readers.file": "llama-index-readers-file~=0.1.0",
+    "llama_index.readers.web": "llama-index-readers-web~=0.1.0",
+    "llama_index.text_splitter": "llama-index~=0.9.0",
+    "llama_index": "llama-index-core~=0.10.0",
     "langchain.text_splitter": "langchain",
     "dotenv": "python-dotenv",
     "PIL": "Pillow",
@@ -242,19 +242,77 @@ def installed_distribution_map() -> dict[str, str]:
     return result
 
 
-def requirement_for(module: str, installed: dict[str, str]) -> str:
+def installed_distribution_versions() -> dict[str, str]:
+    """读取当前环境中已安装发行包的版本。"""
+    result = {}
+    try:
+        distributions = importlib.metadata.packages_distributions()
+    except Exception:  # 某些精简 Python 环境可能无法读取 metadata
+        return result
+
+    package_names = {
+        package_name
+        for names in distributions.values()
+        for package_name in names
+    }
+    for package_name in package_names:
+        try:
+            version = importlib.metadata.version(package_name)
+        except importlib.metadata.PackageNotFoundError:
+            continue
+        result[normalise_requirement_name(package_name)] = version
+    return result
+
+
+def has_version_specifier(requirement: str) -> bool:
+    return bool(re.search(r"(?:===|==|~=|>=|<=|!=|>|<)", requirement))
+
+
+def add_compatible_version(requirement: str, versions: dict[str, str]) -> str:
+    """按已安装版本生成同一 minor 版本范围，例如 ~=2.32.0。
+
+    三段式 ~=2.32.0 等价于 >=2.32.0,<2.33.0。
+    """
+    if has_version_specifier(requirement):
+        return requirement
+
+    package_name = requirement_name(requirement)
+    if package_name is None:
+        return requirement
+    version = versions.get(normalise_requirement_name(package_name))
+    if version is None:
+        return requirement
+
+    match = re.match(r"^(\d+)\.(\d+)", version)
+    if match is None:
+        return requirement
+    return f"{package_name}~={match.group(1)}.{match.group(2)}.0"
+
+
+def requirement_for(
+    module: str,
+    installed: dict[str, str],
+    versions: dict[str, str] | None = None,
+) -> str:
     override_names = sorted(
         REQUIREMENT_OVERRIDES,
         key=len,
         reverse=True,
     )
+    requirement = None
     for import_name in override_names:
         if module == import_name or module.startswith(import_name + "."):
-            return REQUIREMENT_OVERRIDES[import_name]
+            requirement = REQUIREMENT_OVERRIDES[import_name]
+            break
 
-    root_name = module.split(".", 1)[0]
-    package_name = installed.get(root_name, root_name.replace("_", "-"))
-    return package_name
+    if requirement is None:
+        root_name = module.split(".", 1)[0]
+        package_name = installed.get(root_name, root_name.replace("_", "-"))
+        requirement = package_name
+
+    if versions is not None:
+        return add_compatible_version(requirement, versions)
+    return requirement
 
 
 def requirement_name(line: str) -> str | None:
@@ -333,8 +391,9 @@ def sync(project_root: Path, scan_dir: Path, dry_run: bool = False) -> int:
         and not module.split(".", 1)[0].startswith("_")
     }
     installed = installed_distribution_map()
+    versions = installed_distribution_versions()
     discovered_requirements = {
-        requirement_for(module, installed)
+        requirement_for(module, installed, versions)
         for module in third_party_modules
     }
     requirements = (
@@ -358,6 +417,16 @@ def sync(project_root: Path, scan_dir: Path, dry_run: bool = False) -> int:
             print(f"  + {requirement}")
     else:
         print("requirements.txt：无需更新")
+
+    unbounded_requirements = sorted(
+        requirement
+        for requirement in added_requirements
+        if not has_version_specifier(requirement)
+    )
+    if unbounded_requirements:
+        print("以下新增依赖无法自动确定版本上限，请补充 REQUIREMENT_OVERRIDES：")
+        for requirement in unbounded_requirements:
+            print(f"  ! {requirement}")
 
     if discovered_requirements:
         print("识别到的第三方依赖：")
