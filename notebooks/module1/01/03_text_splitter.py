@@ -1,5 +1,5 @@
 # 示例：不同的分块策略
-from llama_index.text_splitter import (
+from llama_index.core.node_parser import (
     SentenceSplitter,
     TokenTextSplitter,
 )
@@ -27,7 +27,7 @@ def chunk_by_char(text, chunk_size=500, chunk_overlap=50):
     return chunks
 
 
-# 2. 按Token分块
+# 2. 按Token 分块
 def chunk_by_token(text, chunk_size=1000, chunk_overlap=100):
     """
     按Token数分块（更符合LLM处理方式）
@@ -43,7 +43,7 @@ def chunk_by_token(text, chunk_size=1000, chunk_overlap=100):
     splitter = TokenTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
-        encoding_name="cl100k_base"  # OpenAI的编码方式
+        separator=" ",  # 当前版本不支持 encoding_name，由分词器自行处理 Token
     )
     chunks = splitter.split_text(text)
     return chunks
@@ -64,7 +64,7 @@ def chunk_recursive(documents, chunk_size=1000, chunk_overlap=200):
     Returns:
         分块列表
     """
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -92,6 +92,6 @@ if __name__ == "__main__":
     chunks_char = chunk_by_char(sample_text, chunk_size=50)
     print(f"字符分块: {len(chunks_char)} 个块")
 
-    # Token分块
-    chunks_token = chunk_by_token(sample_text, chunk_size=20)
-    print(f"Token分块: {len(chunks_token)} 个块")
+    # Token 分块
+    chunks_token = chunk_by_token(sample_text, chunk_size=20, chunk_overlap=5)
+    print(f"Token 分块: {len(chunks_token)} 个块")
