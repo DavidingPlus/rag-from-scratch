@@ -12,18 +12,20 @@ from __future__ import annotations
 import argparse
 import ast
 import importlib.metadata
+import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 
 # import 名称和 PyPI 发行包名称并不总是一致。这里放项目中已经用到的包，以及几个常见的名称映射；其余包会优先从当前环境查询，最后才按 import_name -> import-name 推断。
 REQUIREMENT_OVERRIDES = {
-    "llama_index.readers.file": "llama-index-readers-file~=0.1.0",
-    "llama_index.readers.web": "llama-index-readers-web~=0.1.0",
-    "llama_index.text_splitter": "llama-index~=0.9.0",
-    "llama_index": "llama-index-core~=0.10.0",
-    "langchain.text_splitter": "langchain",
+    "llama_index.readers.file": "llama-index-readers-file",
+    "llama_index.readers.web": "llama-index-readers-web",
+    "llama_index.text_splitter": "llama-index-core",
+    "llama_index": "llama-index-core",
+    "langchain.text_splitter": "langchain-text-splitters",
     "dotenv": "python-dotenv",
     "PIL": "Pillow",
     "cv2": "opencv-python",
@@ -31,6 +33,12 @@ REQUIREMENT_OVERRIDES = {
     "bs4": "beautifulsoup4",
     "dateutil": "python-dateutil",
     "sklearn": "scikit-learn",
+}
+
+REQUIREMENT_VERSION_OVERRIDES = {
+    "llama-index-core": "0.14.24",
+    "llama-index-readers-file": "0.7.0",
+    "llama-index-readers-web": "0.7.0",
 }
 
 FALLBACK_STDLIB_MODULES = {
@@ -264,14 +272,59 @@ def installed_distribution_versions() -> dict[str, str]:
     return result
 
 
+def latest_index_versions(package_names: set[str]) -> dict[str, str]:
+    """从 pip 配置的包索引查询最新稳定版本。"""
+    if not package_names:
+        return {}
+
+    def fetch(package_name: str) -> tuple[str, str | None]:
+        command = [
+            sys.executable,
+            "-m",
+            "pip",
+            "index",
+            "versions",
+            package_name,
+            "--json",
+            "--no-input",
+            "--disable-pip-version-check",
+        ]
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return package_name, None
+
+        if result.returncode != 0:
+            return package_name, None
+        try:
+            payload = json.loads(result.stdout)
+            version = payload.get("latest")
+        except json.JSONDecodeError:
+            return package_name, None
+        return package_name, version if isinstance(version, str) else None
+
+    return {
+        normalise_requirement_name(name): version
+        for name, version in (fetch(name) for name in sorted(package_names))
+        if version is not None
+    }
+
+
 def has_version_specifier(requirement: str) -> bool:
     return bool(re.search(r"(?:===|==|~=|>=|<=|!=|>|<)", requirement))
 
 
-def add_compatible_version(requirement: str, versions: dict[str, str]) -> str:
-    """按已安装版本生成同一 minor 版本范围，例如 ~=2.32.0。
+def add_exact_version(requirement: str, versions: dict[str, str]) -> str:
+    """按已安装版本生成精确锁定，例如 ==2.32.1。
 
-    三段式 ~=2.32.0 等价于 >=2.32.0,<2.33.0。
+    范围约束会让 pip 在依赖冲突时回溯下载多个版本；直接依赖使用
+    == 可以保证每个包只提供一个候选版本。
     """
     if has_version_specifier(requirement):
         return requirement
@@ -279,14 +332,15 @@ def add_compatible_version(requirement: str, versions: dict[str, str]) -> str:
     package_name = requirement_name(requirement)
     if package_name is None:
         return requirement
-    version = versions.get(normalise_requirement_name(package_name))
+    normalised_name = normalise_requirement_name(package_name)
+    version = versions.get(
+        normalised_name,
+        REQUIREMENT_VERSION_OVERRIDES.get(normalised_name),
+    )
     if version is None:
         return requirement
 
-    match = re.match(r"^(\d+)\.(\d+)", version)
-    if match is None:
-        return requirement
-    return f"{package_name}~={match.group(1)}.{match.group(2)}.0"
+    return f"{package_name}=={version}"
 
 
 def requirement_for(
@@ -311,7 +365,7 @@ def requirement_for(
         requirement = package_name
 
     if versions is not None:
-        return add_compatible_version(requirement, versions)
+        return add_exact_version(requirement, versions)
     return requirement
 
 
@@ -399,6 +453,27 @@ def sync(project_root: Path, scan_dir: Path, dry_run: bool = False) -> int:
     requirements = (
         read_text(requirements_path) if requirements_path.exists() else ""
     )
+    existing_requirement_names = {
+        normalise_requirement_name(name)
+        for line in requirements.splitlines()
+        if (name := requirement_name(line)) is not None
+    }
+    missing_unversioned_names = {
+        normalise_requirement_name(
+            requirement_name(requirement) or requirement)
+        for requirement in discovered_requirements
+        if normalise_requirement_name(
+            requirement_name(requirement) or requirement
+        ) not in existing_requirement_names
+        and not has_version_specifier(requirement)
+    }
+    index_versions = latest_index_versions(missing_unversioned_names)
+    if index_versions:
+        discovered_requirements = {
+            add_exact_version(requirement, index_versions)
+            for requirement in discovered_requirements
+        }
+
     updated_requirements, added_requirements = add_requirements(
         requirements,
         discovered_requirements,
@@ -424,7 +499,7 @@ def sync(project_root: Path, scan_dir: Path, dry_run: bool = False) -> int:
         if not has_version_specifier(requirement)
     )
     if unbounded_requirements:
-        print("以下新增依赖无法自动确定版本上限，请补充 REQUIREMENT_OVERRIDES：")
+        print("以下新增依赖无法自动确定精确版本，请先安装后再同步：")
         for requirement in unbounded_requirements:
             print(f"  ! {requirement}")
 
