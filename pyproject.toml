@@ -22,3 +22,8 @@ n_m1_02_04_prepare_data_pipeline = {cmd = "python notebooks/module1/02/04_prepar
 n_m1_03_01_document_loading = {cmd = "python notebooks/module1/03/01_document_loading.py"}
 n_m1_03_02_custom_metadata = {cmd = "python notebooks/module1/03/02_custom_metadata.py"}
 n_m1_03_03_document_loader_class = {cmd = "python notebooks/module1/03/03_document_loader_class.py"}
+n_m1_03_04_fixed_length_chunking = {cmd = "python notebooks/module1/03/04_fixed_length_chunking.py"}
+n_m1_03_05_sentence_chunking = {cmd = "python notebooks/module1/03/05_sentence_chunking.py"}
+n_m1_03_06_paragraph_chunking = {cmd = "python notebooks/module1/03/06_paragraph_chunking.py"}
+n_m1_03_07_chunk_size_experiment = {cmd = "python notebooks/module1/03/07_chunk_size_experiment.py"}
+n_m1_03_08_text_splitting = {cmd = "python notebooks/module1/03/08_text_splitting.py"}
