@@ -6,5 +6,6 @@ llama-index-readers-file==0.7.0
 llama-index-readers-web==0.7.0
 numpy==2.4.6
 openai==3.13.0
+python-dotenv==1.2.3
 scikit-learn==1.9.1
 sentence-transformers==6.0.1
