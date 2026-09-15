@@ -19,3 +19,6 @@ n_m1_02_01_create_sample_data = {cmd = "python notebooks/module1/02/01_create_sa
 n_m1_02_02_prepare_custom_data = {cmd = "python notebooks/module1/02/02_prepare_custom_data.py"}
 n_m1_02_03_preprocess_data = {cmd = "python notebooks/module1/02/03_preprocess_data.py"}
 n_m1_02_04_prepare_data_pipeline = {cmd = "python notebooks/module1/02/04_prepare_data_pipeline.py"}
+n_m1_03_01_document_loading = {cmd = "python notebooks/module1/03/01_document_loading.py"}
+n_m1_03_02_custom_metadata = {cmd = "python notebooks/module1/03/02_custom_metadata.py"}
+n_m1_03_03_document_loader_class = {cmd = "python notebooks/module1/03/03_document_loader_class.py"}
