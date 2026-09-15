@@ -31,3 +31,4 @@ htmlcov/
 Thumbs.db
 
 data/
+chroma_db/

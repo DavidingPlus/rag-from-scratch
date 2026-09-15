@@ -27,3 +27,6 @@ n_m1_03_05_sentence_chunking = {cmd = "python notebooks/module1/03/05_sentence_c
 n_m1_03_06_paragraph_chunking = {cmd = "python notebooks/module1/03/06_paragraph_chunking.py"}
 n_m1_03_07_chunk_size_experiment = {cmd = "python notebooks/module1/03/07_chunk_size_experiment.py"}
 n_m1_03_08_text_splitting = {cmd = "python notebooks/module1/03/08_text_splitting.py"}
+n_m1_03_09_openai_embedding = {cmd = "python notebooks/module1/03/09_openai_embedding.py"}
+n_m1_03_10_bge_model = {cmd = "python notebooks/module1/03/10_bge_model.py"}
+n_m1_03_11_vector_retrieval = {cmd = "python notebooks/module1/03/11_vector_retrieval.py"}
