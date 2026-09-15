@@ -30,3 +30,4 @@ n_m1_03_08_text_splitting = {cmd = "python notebooks/module1/03/08_text_splittin
 n_m1_03_09_openai_embedding = {cmd = "python notebooks/module1/03/09_openai_embedding.py"}
 n_m1_03_10_bge_model = {cmd = "python notebooks/module1/03/10_bge_model.py"}
 n_m1_03_11_vector_retrieval = {cmd = "python notebooks/module1/03/11_vector_retrieval.py"}
+n_m1_03_12_retrieval_evaluation = {cmd = "python notebooks/module1/03/12_retrieval_evaluation.py"}
