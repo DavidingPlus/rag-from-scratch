@@ -3,11 +3,42 @@
 
 from __future__ import annotations
 
-import re
+import json
 from typing import Any
 
 from utils.client import buildClient
 from utils.config import Settings
+
+
+def _parse_score(score_text: str) -> float:
+    """从 JSON 输出中读取并校验忠实度分数。"""
+    if not score_text.strip():
+        raise ValueError("DeepSeek 返回了空内容，无法读取忠实度分数")
+
+    try:
+        result = json.loads(score_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"DeepSeek 返回的不是合法 JSON：{score_text!r}") from exc
+
+    if not isinstance(result, dict) or "score" not in result:
+        raise ValueError(
+            "DeepSeek JSON 必须包含 score 字段，"
+            f"实际返回：{score_text!r}"
+        )
+
+    score = result["score"]
+    if isinstance(score, bool):
+        raise ValueError("JSON 中的 score 必须是 0-1 之间的数字")
+
+    try:
+        score = float(score)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("JSON 中的 score 必须是 0-1 之间的数字") from exc
+
+    if not 0 <= score <= 1:
+        raise ValueError(f"JSON 中的 score 超出范围 [0, 1]：{score}")
+
+    return score
 
 
 def evaluate_faithfulness(
@@ -27,6 +58,9 @@ def evaluate_faithfulness(
 
     Returns:
         faithfulness_score: 忠实度分数 (0-1)
+
+    Raises:
+        ValueError: 模型返回的 JSON 或 score 字段不符合要求。
     """
     if llm_client is None or llm_model is None:
         settings = Settings.fromEnv()
@@ -61,37 +95,32 @@ def evaluate_faithfulness(
 - 0.1-0.3: 大量编造信息
 - 0.0: 完全不基于文档
 
-请只返回一个0-1之间的分数，保留两位小数。
+请只返回合法 JSON，不要返回 Markdown 代码块或额外解释。
+JSON 格式必须是：{{"score": 0.85}}
+其中 score 必须是 0 到 1 之间的数字，并保留两位小数。
 """
 
     response = llm_client.chat.completions.create(
         model=llm_model,
         messages=[
-            {"role": "system", "content": "你是一个专业的评估助手。"},
+            {
+                "role": "system",
+                "content": (
+                    "你是一个专业的评估助手。"
+                    "请严格按照用户要求输出 JSON。"
+                ),
+            },
             {"role": "user", "content": prompt}
         ],
-        temperature=0,
-        max_tokens=20,
+        response_format={"type": "json_object"},
     )
 
-    # 提取分数
-    score_text = response.choices[0].message.content.strip()
-    print("DeepSeek 原始返回：", repr(score_text))
-    try:
-        score = float(score_text)
-        return max(0, min(1, score))  # 确保在0-1之间
-    except ValueError:
-        # 如果返回的不是纯数字，尝试提取
-        import re
-        numbers = re.findall(r'0\.\d+', score_text)
-        if numbers:
-            return float(numbers[0])
-        return 0.5  # 默认分数
+    score_text = response.choices[0].message.content or ""
+    return _parse_score(score_text)
 
 
 # 示例
 if __name__ == "__main__":
-    # 按项目统一配置创建一次客户端，供多个测试用例复用。
     settings = Settings.fromEnv()
     client = buildClient(settings)
 
