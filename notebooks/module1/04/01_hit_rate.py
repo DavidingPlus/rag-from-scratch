@@ -1,4 +1,4 @@
-# 文件名：04_01_hit_rate.py
+# 文件名：01_hit_rate.py
 """
 Hit Rate计算示例
 """
