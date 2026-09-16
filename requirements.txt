@@ -4,11 +4,10 @@ llama-index-core==0.14.24
 llama-index-readers-file==0.7.0
 llama-index-readers-web==0.7.0
 numpy==2.4.6
-openai==3.13.0
+openai>=1.1.0,<2.0.0
 python-dotenv==1.2.3
 scikit-learn==1.9.1
 sentence-transformers==6.0.1
 datasets==5.0.1
 ragas==0.4.3
-# Ragas 0.4.3 仍使用该旧版 VertexAI 导入路径；0.4.2 已移除该路径。
 langchain-community>=0.4.1,<0.4.2
