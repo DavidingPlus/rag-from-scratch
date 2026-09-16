@@ -32,3 +32,7 @@ n_m1_03_10_bge_model = {cmd = "python notebooks/module1/03/10_bge_model.py"}
 n_m1_03_11_vector_retrieval = {cmd = "python notebooks/module1/03/11_vector_retrieval.py"}
 n_m1_03_12_retrieval_evaluation = {cmd = "python notebooks/module1/03/12_retrieval_evaluation.py"}
 n_m1_03_13_rag_generation = {cmd = "python notebooks/module1/03/13_rag_generation.py", env = {PYTHONPATH = "."}}
+n_m1_04_01_hit_rate = {cmd = "python notebooks/module1/04/01_hit_rate.py"}
+n_m1_04_02_mrr = {cmd = "python notebooks/module1/04/02_mrr.py"}
+n_m1_04_03_precision_at_k = {cmd = "python notebooks/module1/04/03_precision_at_k.py"}
+n_m1_04_04_retrieval_eval = {cmd = "python notebooks/module1/04/04_retrieval_eval.py"}
